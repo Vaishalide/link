@@ -1,15 +1,20 @@
 const express = require('express');
-const request = require('request');
+const { createProxyMiddleware } = require('http-proxy-middleware');
+
 const app = express();
 
-const targetBaseUrl = 'https://muftukmall.fun';
-
-app.use('/pw', (req, res) => {
-  const url = targetBaseUrl + req.url.replace('/pw', '');
-  req.pipe(request(url)).pipe(res);
-});
+app.use('/muft', createProxyMiddleware({
+  target: 'https://muftukmall.fun',
+  changeOrigin: true,
+  pathRewrite: { '^/muft': '' },
+  onProxyRes: function (proxyRes) {
+    // Remove frame-blocking headers
+    delete proxyRes.headers['x-frame-options'];
+    delete proxyRes.headers['content-security-policy'];
+  }
+}));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Proxy server running on port ${PORT}`);
+  console.log(`✅ Proxy running at http://localhost:${PORT}`);
 });
